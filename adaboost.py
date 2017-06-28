@@ -2,7 +2,7 @@ import numpy as np
 
 
 def calc_error(y, y_):
-    return (y - y_) ** 2
+    return np.sqrt((y - y_) ** 2)
 
 
 class AdaBoost:
@@ -18,7 +18,7 @@ class AdaBoost:
         predict = model.predict(self.trainX)
         errors = []
         for i in range(self.N):
-            errors.append(calc_error(self.trainY[i], predict[i]))
+            errors.append(calc_error(self.trainY[i], predict[i, 0]))
         e = (errors * self.weights).sum()
         alpha = 0.5 * np.log((1 - e) / e)
         print('e=%.4f a=%.4f' % (e, alpha))
@@ -32,12 +32,13 @@ class AdaBoost:
     def predict(self, x_set):
         n_models = len(self.models)
         alpha_sum = np.sum(self.alphas)
-        final_predict = np.zeros(len(x_set))
+        final_predict = np.zeros(1)
         for i in range(n_models):
             predict = self.models[i].predict(x_set)
-            final_predict = final_predict + predict * self.alphas[i]
+            final_predict = final_predict + predict[:, 0] * self.alphas[i]
         final_predict = final_predict / alpha_sum
-        return final_predict
+
+        return final_predict.reshape(len(x_set), 1)
 
     def evaluate(self):
         n_models = len(self.models)
@@ -45,7 +46,7 @@ class AdaBoost:
         final_predict = np.zeros(len(self.trainX))
         for i in range(n_models):
             predict = self.models[i].predict(self.trainX)
-            final_predict = final_predict + predict * self.alphas[i]
+            final_predict = final_predict + predict[:, 0] * self.alphas[i]
         final_predict = final_predict / alpha_sum
         errors = []
         for i in range(self.N):

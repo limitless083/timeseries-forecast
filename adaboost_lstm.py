@@ -1,14 +1,14 @@
+import numpy
+import matplotlib.pyplot as plt
+import pandas
 import math
 
-import matplotlib.pyplot as plt
-import numpy
-import pandas
 from adaboost import AdaBoost
+from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
-from keras.models import Sequential
-from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import mean_squared_error
 
 
 # convert an array of values into a dataset matrix
@@ -42,11 +42,12 @@ if __name__ == '__main__':
     trainX, trainY = create_dataset(train, look_back)
     testX, testY = create_dataset(test, look_back)
 
+    # reshape trainX and testX to feed the model
     trainX = numpy.reshape(trainX, (trainX.shape[0], 1, trainX.shape[1]))
     testX = numpy.reshape(testX, (testX.shape[0], 1, testX.shape[1]))
 
     adaboost = AdaBoost(trainX, trainY)
-    for i in range(40):
+    for i in range(20):
         sample_weights = adaboost.get_weights()
         model = Sequential()
         model.add(LSTM(4, input_shape=(1, look_back)))
@@ -56,6 +57,7 @@ if __name__ == '__main__':
         adaboost.set_rule(model)
     print("final error: ", adaboost.evaluate())
 
+    print(adaboost.predict(trainX))
     # trainPredict = model.predict(trainX)
     trainPredict = adaboost.predict(trainX)
     # testPredict = model.predict(testX)
