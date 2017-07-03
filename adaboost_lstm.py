@@ -24,7 +24,7 @@ def create_dataset(dataset, look_back=1):
 if __name__ == '__main__':
     numpy.random.seed(7)
 
-    dataframe = pandas.read_csv('~/short_essay/data/international-airline-passengers.csv', usecols=[1], engine='python',
+    dataframe = pandas.read_csv('../data/international-airline-passengers.csv', usecols=[1], engine='python',
                                 skipfooter=3)
     dataset = dataframe.values
     dataset = dataset.astype('float32')
