@@ -1,25 +1,25 @@
-import numpy
-import matplotlib.pyplot as plt
-import pandas
 import math
 
-from adaboost import AdaBoost
-from keras.models import Sequential
+import matplotlib.pyplot as plt
+import numpy
 from keras.layers import Dense
 from keras.layers import LSTM
-from sklearn.preprocessing import MinMaxScaler
+from keras.models import Sequential
+from pandas import *
 from sklearn.metrics import mean_squared_error
+from sklearn.preprocessing import MinMaxScaler
+
+from adaboost import AdaBoost
 
 
 # convert an array of values into a dataset matrix
 def create_dataset(dataset, look_back=1):
     dataX, dataY = [], []
-    for i in range(len(dataset) - look_back - 1):
+    for i in range(len(dataset) - look_back):
         a = dataset[i:(i + look_back), 0]
         dataX.append(a)
         dataY.append(dataset[i + look_back, 0])
     return numpy.array(dataX), numpy.array(dataY)
-
 
 if __name__ == '__main__':
     numpy.random.seed(7)
@@ -30,6 +30,7 @@ if __name__ == '__main__':
     dataset = dataset.astype('float32')
 
     scaler = MinMaxScaler(feature_range=(0, 1))
+    first_data = dataset[0]
     dataset = scaler.fit_transform(dataset)
 
     train_size = int(len(dataset) * 0.67)
@@ -57,10 +58,7 @@ if __name__ == '__main__':
         adaboost.set_rule(model)
     print("final error: ", adaboost.evaluate())
 
-    print(adaboost.predict(trainX))
-    # trainPredict = model.predict(trainX)
     trainPredict = adaboost.predict(trainX)
-    # testPredict = model.predict(testX)
     testPredict = adaboost.predict(testX)
     # invert predictions
     trainPredict = scaler.inverse_transform(trainPredict)
@@ -75,11 +73,12 @@ if __name__ == '__main__':
 
     trainPredictPlot = numpy.empty_like(dataset)
     trainPredictPlot[:, :] = numpy.nan
+    trainPredictPlot[0, :] = first_data
     trainPredictPlot[look_back:len(trainPredict) + look_back, :] = trainPredict
     # shift test predictions for plotting
     testPredictPlot = numpy.empty_like(dataset)
     testPredictPlot[:, :] = numpy.nan
-    testPredictPlot[len(trainPredict) + (look_back * 2) + 1:len(dataset) - 1, :] = testPredict
+    testPredictPlot[len(trainPredict) + look_back + 1:len(dataset), :] = testPredict
     # plot baseline and predictions
     #
     plt.plot(scaler.inverse_transform(dataset))
