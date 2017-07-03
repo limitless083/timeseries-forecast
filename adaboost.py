@@ -18,8 +18,8 @@ class AdaBoost:
         predict = model.predict(self.trainX)
         errors = []
         for i in range(self.N):
-            errors.append(calc_error(self.trainY[i], predict[i, 0]))
-        e = (errors * self.weights).sum()
+            errors.append(self.weights[i] * calc_error(self.trainY[i], predict[i, 0]))
+        e = np.sum(errors)
         alpha = 0.5 * np.log((1 - e) / e)
         print('e=%.4f a=%.4f' % (e, alpha))
         w = np.zeros(self.N)
