@@ -69,7 +69,7 @@ if __name__ == '__main__':
     for i in range(1):
         sample_weights = adaboost.get_weights()
         model = Sequential()
-        model.add(LSTM(50, input_shape=(1, look_back)))
+        model.add(LSTM(60, input_shape=(1, look_back)))
         model.add(Dense(1))
         model.compile(loss='mean_squared_error', optimizer='adam')
         model.fit(trainX, trainY, epochs=100, batch_size=1, verbose=2, sample_weight=sample_weights)
