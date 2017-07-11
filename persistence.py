@@ -2,14 +2,8 @@ import math
 
 import matplotlib.pyplot as plt
 import numpy
-from keras.layers import Dense
-from keras.layers import LSTM
-from keras.models import Sequential
 from pandas import *
 from sklearn.metrics import mean_squared_error
-from sklearn.preprocessing import MinMaxScaler
-
-from adaboost import AdaBoost
 
 
 # frame a sequence as a supervised learning problem
@@ -22,6 +16,10 @@ def timeseries_to_supervised(dataset, look_back=1):
     return numpy.array(dataX), numpy.array(dataY)
 
 
+def predict(x):
+    return x
+
+
 if __name__ == '__main__':
     # fix the random number seed to ensure our results are reproducible.
     numpy.random.seed(7)
@@ -29,51 +27,35 @@ if __name__ == '__main__':
     series = pandas.read_csv('./data/random_data.csv', usecols=[1], engine='python')
     raw_values = series.values
     raw_values = raw_values.astype('float32')
-    scaler = MinMaxScaler(feature_range=(0, 1))
     t0 = raw_values[0]
-    dataset = scaler.fit_transform(raw_values)
 
     # test_size = int(len(raw_values) * 0.33) + 1
     test_size = 12
 
     # reshape into X=t and Y=t+1
     look_back = 1
-    X, Y = timeseries_to_supervised(dataset, look_back)
+    X, Y = timeseries_to_supervised(raw_values, look_back)
     trainX, trainY = X[0:-test_size], Y[0:-test_size]
     testX, testY = X[-test_size:], Y[-test_size:]
     print(len(trainX))
     print(len(testX))
 
     # reshape trainX and testX to feed the model
-    trainX = numpy.reshape(trainX, (trainX.shape[0], 1, trainX.shape[1]))
-    testX = numpy.reshape(testX, (testX.shape[0], 1, testX.shape[1]))
-
-    adaboost = AdaBoost(trainX, trainY)
-    for i in range(1):
-        sample_weights = adaboost.get_weights()
-        model = Sequential()
-        model.add(LSTM(60, input_shape=(1, look_back)))
-        model.add(Dense(1))
-        model.compile(loss='mean_squared_error', optimizer='adam')
-        model.fit(trainX, trainY, epochs=200, batch_size=1, verbose=2, sample_weight=sample_weights)
-        adaboost.set_rule(model)
-    print("final error: ", adaboost.evaluate())
-
-    trainPredict = adaboost.predict(trainX)
-    testPredict = adaboost.predict(testX)
+    # trainX = numpy.reshape(trainX, (trainX.shape[0], 1, trainX.shape[1]))
+    # testX = numpy.reshape(testX, (testX.shape[0], 1, testX.shape[1]))
 
     # invert predictions
-    trainPredict = scaler.inverse_transform(trainPredict)
-    trainY = scaler.inverse_transform([trainY])
-    testPredict = scaler.inverse_transform(testPredict)
-    testY = scaler.inverse_transform([testY])
+    trainPredict = predict(trainX)
+    testPredict = predict(testX)
 
     # calculate root mean squared error
-    trainScore = math.sqrt(mean_squared_error(trainY[0], trainPredict[:, 0]))
+    trainScore = math.sqrt(mean_squared_error(trainY, trainPredict))
     print('Train Score: %.2f RMSE' % (trainScore))
-    testScore = math.sqrt(mean_squared_error(testY[0], testPredict[:, 0]))
+    testScore = math.sqrt(mean_squared_error(testY, testPredict))
     print('Test Score: %.2f RMSE' % (testScore))
 
+    trainPredict = numpy.reshape(trainPredict, (len(trainPredict), 1))
+    testPredict = numpy.reshape(testPredict, (len(testPredict), 1))
     trainPredictPlot = numpy.empty_like(raw_values)
     trainPredictPlot[:, :] = numpy.nan
     trainPredictPlot[0, :] = t0
